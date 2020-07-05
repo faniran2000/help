@@ -1,0 +1,61 @@
+// Import Modules
+
+var express = require('express');
+var app = express();
+var bodyParser = require('body-parser');
+var AssistantV1 = require('ibm-watson/assistant/v1');
+const { IamAuthenticator } = require('ibm-watson/auth');
+// Twilio Credentials
+
+var accountSid = 'AC92c7bdcb1e4bf872ee6f20e149eb7b7c';
+var authToken = 'f560dd857a3b17c2540081646dd88920e';
+var client = require('twilio')(accountSid, authToken);
+app.use(bodyParser.urlencoded({ entended: false }));
+var env= require('dotenv').config()
+
+
+// Watson Credentials
+var assistant = new AssistantV1({
+version: '2018-09-20',
+authenticator: new IamAuthenticator({
+apikey: '1DD2bFrlRkUivW2O_Y2BVSiOmrA1Uv8vDTTTOGoJhN0C',
+}),
+url: 'https://api.us-east.assistant.Watson.cloud.ibm.com/instances/5dce621f-0210-41ba-b165-8936f680939f',
+});
+
+var context1 = {};
+app.get('/test', function (req, res) {
+})
+// API
+
+app.post('/api', function (req, res) {
+console.log("Request Object");
+var From = req.body.From;
+console.log(From);
+assistant.message({
+skill_id: 'fa008107-e680-4255-a972-41451cc85244',
+input: { 'text': req.body.Body },
+context: context1
+}, function (err, response) {
+if (err)
+console.log('error:', err);
+else {
+context1 = response.context;
+var msg = response.output.text[0];
+console.log("message", msg);
+client.messages
+.create({
+body: msg,
+from:'whatsapp:+14155238886',
+to: 'From',
+}).then(message = console.log(msg))
+.done();
+
+}
+})
+});
+
+//PORT Listen
+app.listen(process.env.PORT||8000, function () {
+console.log("Server is running at 8000");
+});
